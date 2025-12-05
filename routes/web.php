@@ -21,4 +21,5 @@ Route::middleware(['auth.session'])->group(function () {
 
     Route::get('/auditoria/nueva', \App\Livewire\FormularioAuditoria::class)->name('auditoria.nueva');
     Route::get('/auditoria/crosselling', \App\Livewire\FormularioCrosselling::class)->name('auditoria.crosselling');
+    Route::get('/auditoria/digital', \App\Livewire\FormularioDigital::class)->name('auditoria.digital');
 });

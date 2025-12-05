@@ -106,6 +106,30 @@ class HistorialAuditorias extends Component
             ];
         }
 
+        // Si es Prepago Digital (formulario_id = 4), usar mapeo específico
+        if ($formularioId == 4) {
+            return [
+                'Datos de la Llamada' => 'Paso 1 - Datos de la Llamada',
+                'Tipo de Monitoreo' => 'Paso 2 - Tipo de Monitoreo',
+                'Productos Ofertados' => 'Paso 3 - Productos Ofertados',
+                'P4 - Protocolos y Buenas Prácticas' => 'Paso 4 - Protocolos y Buenas Prácticas',
+                'P5 - PEC-UF' => 'Paso 5 - PEC-UF',
+                'P6 - PEC-NEG' => 'Paso 6 - PEC-NEG',
+                'P7 - Manejo de información confidencial' => 'Paso 7 - Manejo de información confidencial',
+                'Novedades Críticas' => 'Paso 8 - Novedades Críticas',
+                'Derivación WhatsApp' => 'Paso 8 - Derivación WhatsApp',
+                'Concretó Venta' => 'Paso 9 - Concretó Venta',
+                'Instalación (Rama SI)' => 'Paso 10 - Instalación del Servicio (SI)',
+                'Seguimiento (Rama SI)' => 'Paso 10 - Seguimiento (SI)',
+                'Observaciones PostVenta (Rama SI)' => 'Paso 11 - Observaciones PostVenta (SI)',
+                'Causa Raíz (Rama NO)' => 'Paso 10 - Causa Raíz Principal (NO)',
+                'Detalles Causa Raíz (Rama NO)' => 'Paso 11 - Detalles Causa Raíz (NO)',
+                'Instalación (Rama NO)' => 'Paso 11 - Instalación del Servicio (NO)',
+                'Seguimiento (Rama NO)' => 'Paso 11 - Seguimiento (NO)',
+                'Observaciones PostVenta Final (Rama NO)' => 'Paso 12 - Observaciones Final (NO)',
+            ];
+        }
+
         // Mapeo original para formulario de auditoría (formulario_id = 1)
         $secciones = DB::table('raz_preguntas_auditorias')
             ->where('formulario_id', $formularioId)

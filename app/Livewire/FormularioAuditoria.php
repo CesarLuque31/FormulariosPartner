@@ -227,6 +227,12 @@ class FormularioAuditoria extends Component
             $query->whereDate('Fecha', $this->filtroFecha);
         }
 
+        // Excluir llamadas de Crosselling (tienen su propio formulario)
+        $query->where('Campaña_Agente', 'NOT LIKE', '%crosselling%')
+            ->where('Campaña_Agente', 'NOT LIKE', '%cross selling%')
+            ->where('Campaña_Agente', 'NOT LIKE', '%Crosselling%')
+            ->where('Campaña_Agente', 'NOT LIKE', '%Cross Selling%');
+
         // Excluir IDs ya auditados
         if (!empty($idsAuditados)) {
             $query->whereNotIn('ID_Largo', $idsAuditados);
@@ -248,19 +254,13 @@ class FormularioAuditoria extends Component
             $this->usuarioAsesor = $llamada->Usuario_Llamada_Origen;
             $this->campana = $llamada->Campaña_Agente ?? 'N/A';
 
-            // Detectar si es campaña Hogar (ID 15 o nombre 'Hogar')
-            if ($this->campana == '15' || stripos($this->campana, 'Hogar') !== false) {
-                $this->formularioId = 2; // ID del formulario Hogar
-                $this->esHogar = true;
-            } else {
-                $this->formularioId = 1;
-                $this->esHogar = false;
-            }
+            // Usar formulario estándar (ID 1) para todas las campañas
+            $this->formularioId = 1;
 
-            // Recargar preguntas del Paso 1 según el formulario seleccionado
+            // Recargar preguntas del Paso 1
             $this->preguntasPaso1 = DB::table('raz_preguntas_auditorias')
                 ->where('formulario_id', $this->formularioId)
-                ->where('seccion', $this->esHogar ? 'Tipo de Monitoreo' : 'Datos de la Llamada')
+                ->where('seccion', 'Datos de la Llamada')
                 ->orderBy('orden')
                 ->get()
                 ->toArray();
@@ -303,19 +303,19 @@ class FormularioAuditoria extends Component
             $this->usuarioAsesor = $llamada->Usuario_Llamada_Origen;
             $this->campana = $llamada->Campaña_Agente ?? 'N/A';
 
-            // Detectar si es campaña Hogar (ID 15 o nombre 'Hogar')
-            if ($this->campana == '15' || stripos($this->campana, 'Hogar') !== false) {
-                $this->formularioId = 2;
-                $this->esHogar = true;
-            } else {
-                $this->formularioId = 1;
-                $this->esHogar = false;
+            // Detectar si es campaña Crosselling y redirigir
+            if (stripos($this->campana, 'Crosselling') !== false || stripos($this->campana, 'Cross') !== false) {
+                // Redirigir a formulario de Crosselling con el ID como query parameter
+                return redirect()->route('auditoria.crosselling')->with('idCicManual', $this->idCic);
             }
+
+            // Usar formulario estándar (ID 1) para todas las campañas
+            $this->formularioId = 1;
 
             // Recargar preguntas del Paso 1
             $this->preguntasPaso1 = DB::table('raz_preguntas_auditorias')
                 ->where('formulario_id', $this->formularioId)
-                ->where('seccion', $this->esHogar ? 'Tipo de Monitoreo' : 'Datos de la Llamada')
+                ->where('seccion', 'Datos de la Llamada')
                 ->orderBy('orden')
                 ->get()
                 ->toArray();

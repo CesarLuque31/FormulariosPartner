@@ -58,8 +58,10 @@
                 <h2 class="text-2xl font-semibold text-gray-800 mb-6 text-center">Selecciona el método de carga
                     (Crosselling)</h2>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                    <!-- Opción Manual -->
+                <div class="max-w-md mx-auto mb-8">
+                    {{-- Opción Manual - COMENTADO: Ahora se maneja desde FormularioAuditoria con redirección automática
+                    --}}
+                    {{--
                     <div class="border-2 border-gray-200 rounded-lg p-6 hover:border-green-500 transition">
                         <div class="text-center mb-4">
                             <svg class="w-16 h-16 mx-auto text-green-600 mb-3" fill="none" stroke="currentColor"
@@ -79,7 +81,7 @@
                             <input type="text" wire:model.live="idCicManual"
                                 class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
                             @error('idCicManual')
-                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
                         </div>
 
@@ -88,6 +90,7 @@
                             Cargar ID Manual
                         </button>
                     </div>
+                    --}}
 
                     <!-- Opción Aleatoria -->
                     <div class="border-2 border-gray-200 rounded-lg p-6 hover:border-teal-500 transition">
@@ -243,7 +246,7 @@
                         <div class="space-y-3">
                             <label
                                 class="flex items-center p-4 bg-white border-2 rounded-xl cursor-pointer hover:bg-green-50 hover:border-green-300 transition-all
-                                                                                                        {{ $tipoGestion === 'RENOVACIÓN' ? 'border-green-500 bg-green-50 ring-1 ring-green-500' : 'border-gray-200' }}">
+                                                                                                                {{ $tipoGestion === 'RENOVACIÓN' ? 'border-green-500 bg-green-50 ring-1 ring-green-500' : 'border-gray-200' }}">
                                 <input type="radio" wire:model.live="tipoGestion" value="RENOVACIÓN"
                                     class="w-5 h-5 text-green-600 focus:ring-green-500 border-gray-300">
                                 <span class="ml-3 text-base font-medium text-gray-900">RENOVACIÓN</span>
@@ -251,7 +254,7 @@
 
                             <label
                                 class="flex items-center p-4 bg-white border-2 rounded-xl cursor-pointer hover:bg-green-50 hover:border-green-300 transition-all
-                                                                                                        {{ $tipoGestion === 'PORTABILIDAD - LINEA NUEVA' ? 'border-green-500 bg-green-50 ring-1 ring-green-500' : 'border-gray-200' }}">
+                                                                                                                {{ $tipoGestion === 'PORTABILIDAD - LINEA NUEVA' ? 'border-green-500 bg-green-50 ring-1 ring-green-500' : 'border-gray-200' }}">
                                 <input type="radio" wire:model.live="tipoGestion" value="PORTABILIDAD - LINEA NUEVA"
                                     class="w-5 h-5 text-green-600 focus:ring-green-500 border-gray-300">
                                 <span class="ml-3 text-base font-medium text-gray-900">PORTABILIDAD - LINEA NUEVA</span>
@@ -259,7 +262,7 @@
 
                             <label
                                 class="flex items-center p-4 bg-white border-2 rounded-xl cursor-pointer hover:bg-green-50 hover:border-green-300 transition-all
-                                                                                                        {{ $tipoGestion === 'HOGAR' ? 'border-green-500 bg-green-50 ring-1 ring-green-500' : 'border-gray-200' }}">
+                                                                                                                {{ $tipoGestion === 'HOGAR' ? 'border-green-500 bg-green-50 ring-1 ring-green-500' : 'border-gray-200' }}">
                                 <input type="radio" wire:model.live="tipoGestion" value="HOGAR"
                                     class="w-5 h-5 text-green-600 focus:ring-green-500 border-gray-300">
                                 <span class="ml-3 text-base font-medium text-gray-900">HOGAR</span>
@@ -267,7 +270,7 @@
 
                             <label
                                 class="flex items-center p-4 bg-white border-2 rounded-xl cursor-pointer hover:bg-green-50 hover:border-green-300 transition-all
-                                                                                                        {{ $tipoGestion === 'MIGRACION' ? 'border-green-500 bg-green-50 ring-1 ring-green-500' : 'border-gray-200' }}">
+                                                                                                                {{ $tipoGestion === 'MIGRACION' ? 'border-green-500 bg-green-50 ring-1 ring-green-500' : 'border-gray-200' }}">
                                 <input type="radio" wire:model.live="tipoGestion" value="MIGRACION"
                                     class="w-5 h-5 text-green-600 focus:ring-green-500 border-gray-300">
                                 <span class="ml-3 text-base font-medium text-gray-900">MIGRACION</span>
@@ -286,7 +289,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <label
                                 class="flex items-center p-4 bg-white border-2 rounded-xl cursor-pointer hover:bg-teal-50 hover:border-teal-300 transition-all
-                                                                                                        {{ $tipoMonitoreo === 'Aleatorio' ? 'border-teal-500 bg-teal-50 ring-1 ring-teal-500' : 'border-gray-200' }}">
+                                                                                                                {{ $tipoMonitoreo === 'Aleatorio' ? 'border-teal-500 bg-teal-50 ring-1 ring-teal-500' : 'border-gray-200' }}">
                                 <input type="radio" wire:model.live="tipoMonitoreo" value="Aleatorio"
                                     class="w-5 h-5 text-teal-600 focus:ring-teal-500 border-gray-300">
                                 <span class="ml-3 text-base font-medium text-gray-900">Aleatorio</span>
@@ -294,7 +297,7 @@
 
                             <label
                                 class="flex items-center p-4 bg-white border-2 rounded-xl cursor-pointer hover:bg-teal-50 hover:border-teal-300 transition-all
-                                                                                                        {{ $tipoMonitoreo === 'Auditoría' ? 'border-teal-500 bg-teal-50 ring-1 ring-teal-500' : 'border-gray-200' }}">
+                                                                                                                {{ $tipoMonitoreo === 'Auditoría' ? 'border-teal-500 bg-teal-50 ring-1 ring-teal-500' : 'border-gray-200' }}">
                                 <input type="radio" wire:model.live="tipoMonitoreo" value="Auditoría"
                                     class="w-5 h-5 text-teal-600 focus:ring-teal-500 border-gray-300">
                                 <span class="ml-3 text-base font-medium text-gray-900">Auditoría</span>

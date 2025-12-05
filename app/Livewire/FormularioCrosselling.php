@@ -91,9 +91,9 @@ class FormularioCrosselling extends Component
     public $auditoriaId = null;
     public $formularioId = 3; // ID específico para formulario Crosselling
 
-    public function mount()
+    public function mount($idCic = null)
     {
-        \Illuminate\Support\Facades\Log::info('FormularioCrosselling mount started', ['session_dni' => session('dni')]);
+        \Illuminate\Support\Facades\Log::info('FormularioCrosselling mount started', ['session_dni' => session('dni'), 'idCic' => $idCic]);
 
         // Obtener nombre del analista desde sesión
         $empleado = DB::table('pri.empleados')
@@ -259,6 +259,14 @@ class FormularioCrosselling extends Component
                 $this->respuestasPaso6[$q] = '';
             }
         }
+
+        // Si se proporciona idCic como parámetro o desde sesión flash, cargar datos automáticamente
+        $idCicToLoad = $idCic ?? session('idCicManual');
+
+        if ($idCicToLoad) {
+            $this->cargarLlamadaPorId($idCicToLoad);
+            $this->paso = 1; // Ir directamente al formulario
+        }
     }
 
     public function seleccionarAleatorio()
@@ -409,9 +417,10 @@ class FormularioCrosselling extends Component
             $this->campana = $llamada->Campaña_Agente ?? 'N/A';
         } else {
             session()->flash('error', 'No se encontró ninguna llamada con ese ID CIC');
-            $this->paso = 0;
+            $this->paso = 0; // Volver al paso de selección
         }
     }
+
 
     protected function formatDuration($seconds)
     {

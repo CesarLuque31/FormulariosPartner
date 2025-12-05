@@ -1,0 +1,10 @@
+    // Agregar este método al final de la clase FormularioAuditoria, antes del último }
+    
+    public function updatedRespuestasPaso9()
+    {
+        // Cuando cambia la respuesta del Paso 9, limpiar respuestas de pasos siguientes
+        // para evitar que se mezclen datos de diferentes ramas
+        $this->respuestasPaso10 = [];
+        $this->respuestasPaso11 = [];
+        $this->respuestasPaso12 = [];
+    }

@@ -1,0 +1,21 @@
+        // Validar Paso 11 antes de guardar - solo validar respuestas que existen
+        if (!empty($this->respuestasPaso11)) {
+            $idsConRespuesta = array_keys($this->respuestasPaso11);
+            $preguntasP11 = DB::table('raz_preguntas_auditorias')
+                ->where('formulario_id', 1)
+                ->whereIn('id', $idsConRespuesta)
+                ->where('requerido', 1)
+                ->get();
+                
+            foreach ($preguntasP11 as $pregunta) {
+                $valor = $this->respuestasPaso11[$pregunta->id] ?? null;
+                if ($valor === null || $valor === '') {
+                    $this->dispatch('showAlert', [
+                        'type' => 'warning',
+                        'title' => 'Campos Incompletos',
+                        'text' => "Por favor responde: {$pregunta->texto}"
+                    ]);
+                    return;
+                }
+            }
+        }

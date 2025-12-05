@@ -126,7 +126,7 @@ class FormularioAuditoria extends Component
             ->toArray();
     }
 
-    // Watcher para detectar selección de campaña crosselling o prepago digital
+    // Watcher para detectar selección de campaña crosselling, prepago digital o hogar
     public function updatedFiltroCampana($value)
     {
         // Si se selecciona una campaña que contenga "crosselling", redirigir
@@ -147,6 +147,15 @@ class FormularioAuditoria extends Component
             )
         ) {
             return redirect()->route('auditoria.digital');
+        }
+
+        // Si se selecciona una campaña que contenga "hogar", redirigir
+        if (
+            !empty($value) && (
+                stripos($value, 'hogar') !== false
+            )
+        ) {
+            return redirect()->route('auditoria.hogar');
         }
     }
 
@@ -237,14 +246,17 @@ class FormularioAuditoria extends Component
             $query->whereDate('Fecha', $this->filtroFecha);
         }
 
-        // Excluir llamadas de Crosselling y Prepago Digital (tienen sus propios formularios)
+        // Excluir llamadas de Crosselling, Prepago Digital y Hogar (tienen sus propios formularios)
         $query->where('Campaña_Agente', 'NOT LIKE', '%crosselling%')
             ->where('Campaña_Agente', 'NOT LIKE', '%cross selling%')
             ->where('Campaña_Agente', 'NOT LIKE', '%Crosselling%')
             ->where('Campaña_Agente', 'NOT LIKE', '%Cross Selling%')
             ->where('Campaña_Agente', 'NOT LIKE', '%Prepago Digital%')
             ->where('Campaña_Agente', 'NOT LIKE', '%prepago digital%')
-            ->where('Campaña_Agente', 'NOT LIKE', '%PREPAGO DIGITAL%');
+            ->where('Campaña_Agente', 'NOT LIKE', '%PREPAGO DIGITAL%')
+            ->where('Campaña_Agente', 'NOT LIKE', '%Hogar%')
+            ->where('Campaña_Agente', 'NOT LIKE', '%hogar%')
+            ->where('Campaña_Agente', 'NOT LIKE', '%HOGAR%');
 
         // Excluir IDs ya auditados
         if (!empty($idsAuditados)) {
@@ -326,6 +338,12 @@ class FormularioAuditoria extends Component
             if (stripos($this->campana, 'Prepago Digital') !== false || stripos($this->campana, 'Digital') !== false) {
                 // Redirigir a formulario de Prepago Digital con el ID como query parameter
                 return redirect()->route('auditoria.digital')->with('idCicManual', $this->idCic);
+            }
+
+            // Detectar si es campaña Hogar y redirigir
+            if (stripos($this->campana, 'Hogar') !== false) {
+                // Redirigir a formulario de Hogar con el ID como query parameter
+                return redirect()->route('auditoria.hogar')->with('idCicManual', $this->idCic);
             }
 
             // Usar formulario estándar (ID 1) para todas las campañas

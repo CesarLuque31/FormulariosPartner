@@ -55,14 +55,23 @@ class HistorialAuditorias extends Component
             ->orderBy('p.orden') // Asumiendo orden global
             ->get()
             ->map(function ($item) use ($mapaSecciones) {
-                // Decodificar opciones para encontrar el label
-                $opciones = json_decode($item->opciones, true);
-                if (is_array($opciones)) {
-                    foreach ($opciones as $opcion) {
-                        // Comparación flexible para manejar "1" vs 1
-                        if ($opcion['value'] == $item->respuesta) {
-                            $item->respuesta = $opcion['label'];
-                            break;
+                // Convertir valores de radio buttons (1/2/3) a texto legible
+                if ($item->respuesta === '1' || $item->respuesta === 1) {
+                    $item->respuesta = 'SI';
+                } elseif ($item->respuesta === '2' || $item->respuesta === 2) {
+                    $item->respuesta = 'NO';
+                } elseif ($item->respuesta === '3' || $item->respuesta === 3) {
+                    $item->respuesta = 'NO APLICA';
+                } else {
+                    // Si no es 1/2/3, intentar decodificar opciones
+                    $opciones = json_decode($item->opciones, true);
+                    if (is_array($opciones)) {
+                        foreach ($opciones as $opcion) {
+                            // Comparación flexible para manejar "1" vs 1
+                            if ($opcion['value'] == $item->respuesta) {
+                                $item->respuesta = $opcion['label'];
+                                break;
+                            }
                         }
                     }
                 }
@@ -127,6 +136,44 @@ class HistorialAuditorias extends Component
                 'Instalación (Rama NO)' => 'Paso 11 - Instalación del Servicio (NO)',
                 'Seguimiento (Rama NO)' => 'Paso 11 - Seguimiento (NO)',
                 'Observaciones PostVenta Final (Rama NO)' => 'Paso 12 - Observaciones Final (NO)',
+            ];
+        }
+
+        // Si es Hogar (formulario_id = 5), usar mapeo específico
+        if ($formularioId == 5) {
+            return [
+                // Paso 1 del blade = Tipo de Monitoreo
+                'Tipo de Monitoreo' => 'Tipo de Monitoreo',
+                // Paso 2 del blade = Datos de la Llamada + Datos Hogar
+                'Datos de la Llamada' => 'Datos de la Llamada y Datos Hogar',
+                'Datos Hogar' => 'Datos de la Llamada y Datos Hogar',
+                // Paso 3 del blade = PENC
+                'Aplica Script Establecido' => 'PENC - Protocolos y Buenas Prácticas',
+                'Escucha activa' => 'PENC - Protocolos y Buenas Prácticas',
+                'Fórmulas de Cortesía' => 'PENC - Protocolos y Buenas Prácticas',
+                // Paso 4 del blade = Calidad
+                'Información / solución correcta y completa' => 'Calidad de Atención',
+                'Procesos y Registros' => 'Calidad de Atención',
+                'Actitud del servicio' => 'Calidad de Atención',
+                'Calidad de atención' => 'Calidad de Atención',
+                // Paso 5 del blade = Gestión comercial
+                'Gestión comercial' => 'Gestión Comercial',
+                // Paso 6 del blade = PEC CUMPLIMIENTO
+                'Valida identidad para entregar información' => 'PEC - Cumplimiento',
+                // Paso 7 del blade = Novedades
+                'Novedades Críticas' => 'Novedades Críticas',
+                // Paso 8 del blade = Venta
+                'Concretó la venta' => 'Validación de Venta',
+                // Paso 9-11 Rama SI/NO APLICA
+                'Instalación (Rama SI/NO APLICA)' => 'Instalación del Servicio',
+                'Seguimiento (Rama SI/NO APLICA)' => 'Seguimiento PostVenta',
+                'Observaciones PostVenta (Rama SI/NO APLICA)' => 'Observaciones PostVenta',
+                // Paso 9-12 Rama NO
+                'Causa Raíz (Rama NO)' => 'Análisis de Causa Raíz',
+                'Detalle Causa Raíz (Rama NO)' => 'Análisis de Causa Raíz',
+                'Instalación (Rama NO)' => 'Instalación del Servicio',
+                'Seguimiento (Rama NO)' => 'Seguimiento PostVenta',
+                'Observaciones PostVenta (Rama NO)' => 'Observaciones Finales',
             ];
         }
 

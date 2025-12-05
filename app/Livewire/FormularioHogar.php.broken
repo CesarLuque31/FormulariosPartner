@@ -1,0 +1,434 @@
+<?php
+
+namespace App\Livewire;
+
+use Livewire\Component;
+use Illuminate\Support\Facades\DB;
+
+class FormularioHogar extends Component
+{
+    public $paso = 0; // Paso 0: Selección manual/aleatorio
+
+    // Paso 0: Modo de selección
+    public $idCicManual = '';
+
+    // Filtros opcionales para selección aleatoria
+    public $filtroCampana = '';
+    public $filtroDni = '';
+    public $filtroFecha = '';
+    public $campanasDisponibles = [];
+
+    // Control de guardado
+    public $guardado = false;
+    public $bloquearRandomizar = false;
+
+    // Paso 1: Datos de llamada
+    public $nombreAnalista;
+    public $idCic;
+    public $telefono;
+    public $fechaLlamada;
+    public $fechaMonitoreo;
+    public $duracionSegundos;
+    public $duracionFormato;
+    public $nombreAsesor;
+    public $usuarioAsesor;
+    public $campana;
+
+    // Paso 1: Tipo de Monitoreo
+    public $tipoMonitoreo = '';
+
+    // Paso 2: Campos específicos de Hogar
+    public $tipoGestion = ''; // INBOUND / OUTBOUND
+    public $origen = ''; // TIENDA / WHATSAPP / DIGITAL (opcional)
+    public $tipoGestion2 = ''; // Crosseling / Venta Nueva / Up selling / Sin Cobertura
+    public $productoOfertado = ''; // HFC / GPON / DTH / WTTX
+    public $productoOfrecidoDetalle = ''; // Texto libre
+
+    // Paso 3: PENC - ASESOR: PROTOCOLOS // BUENAS PRACTICAS
+    public $preguntasPaso3 = [];
+    public $respuestasPaso3 = [];
+
+    // Paso 4: Evaluación adicional
+    public $preguntasPaso4 = [];
+    public $respuestasPaso4 = [];
+
+    // Paso 5: Gestión comercial
+    public $preguntasPaso5 = [];
+    public $respuestasPaso5 = [];
+
+    // TODO: Agregar propiedades específicas de Hogar según necesidad
+
+    // Progreso
+    public $progress = 0;
+    public $auditoriaId = null;
+
+    public function mount($idCic = null)
+    {
+        \Illuminate\Support\Facades\Log::info('FormularioHogar mount started', ['session_dni' => session('dni'), 'idCic' => $idCic]);
+
+        // Obtener nombre del analista desde sesión
+        $empleado = DB::table('pri.empleados')
+            ->where('DNI', session('dni'))
+            ->first();
+
+        if ($empleado) {
+            $this->nombreAnalista = trim(
+                ($empleado->Nombres ?? '') . ' ' .
+                ($empleado->ApellidoPaterno ?? '') . ' ' .
+                ($empleado->ApellidoMaterno ?? '')
+            );
+        }
+
+        // Fecha de monitoreo = hoy
+        $this->fechaMonitoreo = date('Y-m-d');
+
+        // Cargar campañas disponibles para Hogar
+        $this->campanasDisponibles = DB::table('dbo.Reporte_Llamadas_Detalle')
+            ->where('Fecha', '>=', '2025-10-01')
+            ->whereNotNull('Campaña_Agente')
+            ->where('Campaña_Agente', '!=', '')
+            ->where(function ($query) {
+                $query->where('Campaña_Agente', 'LIKE', '%Hogar%')
+                    ->orWhere('Campaña_Agente', 'LIKE', '%hogar%')
+                    ->orWhere('Campaña_Agente', 'LIKE', '%HOGAR%');
+            })
+            ->distinct()
+            ->pluck('Campaña_Agente')
+            ->sort()
+            ->values()
+            ->toArray();
+
+        // Si se pasa un idCic, cargarlo directamente
+        if ($idCic) {
+            $this->idCicManual = $idCic;
+            $this->cargarLlamadaPorCic($idCic);
+        $this->preguntasPaso3 = [
+            [
+                'seccion' => 'Aplica Script Establecido',
+                'preguntas' => [
+                    'Aplica Script Establecido',
+                    'Saludo Despido',
+                    'Indica su nombre'
+                ]
+            ],
+            [
+                'seccion' => 'Escucha activa',
+                'preguntas' => [
+                    'Desconcentración',
+                    'Interrupciones'
+                ]
+            ],
+            [
+                'seccion' => 'Fórmulas de Cortesía',
+                'preguntas' => [
+                    'Personaliza la llamada',
+                    'Tono de voz, dicción, volumen de voz, vocabulario',
+                    'Amabilidad / Empatía'
+                ]
+            ]
+        ];
+    }
+
+    private function cargarPreguntasPaso4()
+    {
+        // Definir preguntas del Paso 4
+        $this->preguntasPaso4 = [
+            [
+                'seccion' => 'Información / solución correcta y completa',
+                'preguntas' => [
+                    'Información correcta/completa del producto ofrecido'
+                ]
+            ],
+            [
+                'seccion' => 'Procesos y Registros',
+                'preguntas' => [
+                    'Correcto proceso de coordinación',
+                    'Proceso correctamente en los aplicativos'
+                ]
+            ],
+            [
+                'seccion' => 'Actitud del servicio',
+                'preguntas' => [
+                    'Llamada incompleta/cierre de llamada',
+                    'Evita llenar a otro canal',
+                    'Canal abierto'
+                ]
+            ],
+            [
+                'seccion' => 'Calidad de atención',
+                'preguntas' => [
+                    'Saluda y agradece la Espera',
+                    'Tiempo de Espera y uso del hold'
+                ]
+            ]
+        ];
+    }
+
+    private function cargarPreguntasPaso5()
+    {
+        // Definir preguntas del Paso 5: Gestión comercial
+        $this->preguntasPaso5 = [
+            [
+                'seccion' => 'Gestión comercial',
+                'preguntas' => [
+                    'Seguimiento de Gestión',
+                    'Validación de datos',
+                    'Sonidos correctamente registrados',
+                    'Ofrecimiento acorde a la necesidadnecesitada',
+                    'Valida correctamente cobertura',
+                    'Rebate objeciones',
+                    'Despeja dudas del cliente',
+                    'Incentiva a la baja',
+                    'Ofrecimiento de promoción vigente',
+                    'Ofrecimiento convergente',
+                    'Registro correcto y completo en aplicativos'
+                ]
+            ]
+        ];
+    }
+
+    public function cargarLlamadaAleatoria()
+    {
+        $query = DB::table('dbo.Reporte_Llamadas_Detalle')
+            ->where('Fecha', '>=', '2025-10-01')
+            ->whereNotNull('Campaña_Agente')
+            ->where('Campaña_Agente', '!=', '')
+            ->where(function ($q) {
+                $q->where('Campaña_Agente', 'LIKE', '%Hogar%')
+                    ->orWhere('Campaña_Agente', 'LIKE', '%hogar%')
+                    ->orWhere('Campaña_Agente', 'LIKE', '%HOGAR%');
+            });
+
+        // Aplicar filtros opcionales
+        if (!empty($this->filtroCampana)) {
+            $query->where('Campaña_Agente', $this->filtroCampana);
+        }
+
+        if (!empty($this->filtroDni)) {
+            $query->where('DNI_Empleado', $this->filtroDni);
+        }
+
+        if (!empty($this->filtroFecha)) {
+            $query->whereDate('Fecha', $this->filtroFecha);
+        }
+
+        $llamada = $query->inRandomOrder()->first();
+
+        if ($llamada) {
+            $this->mapearDatosLlamada($llamada);
+        } else {
+            $this->dispatch('showAlert', [
+                'type' => 'error',
+                'title' => 'Sin resultados',
+                'text' => 'No se encontraron llamadas de Hogar con los filtros aplicados'
+            ]);
+        }
+    }
+
+    private function cargarLlamadaPorCic($idCic)
+    {
+        $llamada = DB::table('dbo.Reporte_Llamadas_Detalle')
+            ->where('ID_Largo', $idCic)
+            ->first();
+
+        if ($llamada) {
+            $this->mapearDatosLlamada($llamada);
+        } else {
+            $this->dispatch('showAlert', [
+                'type' => 'error',
+                'title' => 'Error',
+                'text' => 'No se encontró la llamada con ID CIC: ' . $idCic
+            ]);
+        }
+    }
+
+    private function mapearDatosLlamada($llamada)
+    {
+        $this->idCic = $llamada->ID_Largo ?? '';
+        $this->telefono = $llamada->Numero ?? '';
+        $this->fechaLlamada = $llamada->Fecha ? date('Y-m-d', strtotime($llamada->Fecha)) : '';
+        $this->duracionSegundos = $llamada->Duracion ?? 0;
+        $this->duracionFormato = gmdate('H:i:s', $this->duracionSegundos);
+        $this->nombreAsesor = $llamada->NombreCompletoAgente ?? '';
+        $this->usuarioAsesor = $llamada->Usuario_Llamada_Origen ?? '';
+        $this->campana = $llamada->Campaña_Agente ?? '';
+    }
+
+    public function seleccionarAleatorio()
+    {
+        if (!empty($this->filtroFecha)) {
+            $this->validate([
+                'filtroFecha' => 'date|after_or_equal:2025-10-01|before_or_equal:today',
+            ], [
+                'filtroFecha.after_or_equal' => 'La fecha debe ser desde Octubre 2025.',
+                'filtroFecha.before_or_equal' => 'La fecha no puede ser futura.',
+            ]);
+
+            if ($this->getErrorBag()->has('filtroFecha')) {
+                return;
+            }
+        }
+
+        $this->cargarLlamadaAleatoria();
+        $this->paso = 1;
+    }
+
+    public function limpiarFiltros()
+    {
+        $this->filtroCampana = '';
+        $this->filtroDni = '';
+        $this->filtroFecha = '';
+    }
+
+    public function randomizar()
+    {
+        $this->cargarLlamadaAleatoria();
+
+        if ($this->idCic) {
+            $this->dispatch('showAlert', [
+                'type' => 'success',
+                'title' => 'Nueva llamada cargada',
+                'text' => "ID CIC: {$this->idCic}"
+            ]);
+        }
+    }
+
+    public function siguiente()
+    {
+        // Validar según el paso actual
+        if ($this->paso === 1) {
+            $this->validate([
+                'tipoMonitoreo' => 'required'
+            ], [
+                'tipoMonitoreo.required' => 'Debe seleccionar el tipo de monitoreo'
+            ]);
+        }
+
+        if ($this->paso === 2) {
+            $this->validate([
+                'tipoGestion' => 'required',
+                // origen es opcional
+                'tipoGestion2' => 'required',
+                'productoOfertado' => 'required',
+                'productoOfrecidoDetalle' => 'required'
+            ], [
+                'tipoGestion.required' => 'Debe seleccionar el tipo de gestión',
+                'tipoGestion2.required' => 'Debe seleccionar el tipo de gestión',
+                'productoOfertado.required' => 'Debe seleccionar el producto ofertado',
+                'productoOfrecidoDetalle.required' => 'Debe detallar el producto ofrecido'
+            ]);
+        }
+
+        if ($this->paso === 3) {
+            // Validar que todas las preguntas del paso 3 estén respondidas
+            foreach ($this->preguntasPaso3 as $section) {
+                foreach ($section['preguntas'] as $pregunta) {
+                    $resp = $this->respuestasPaso3[$pregunta] ?? null;
+                    if (empty($resp)) {
+                        $this->dispatch('showAlert', [
+                            'type' => 'warning',
+                            'title' => 'Campos Incompletos',
+                            'text' => "Debe responder: {$pregunta}"
+                        ]);
+                        return;
+                    }
+                }
+            }
+        }
+
+        if ($this->paso === 4) {
+            // Validar que todas las preguntas del paso 4 estén respondidas
+            foreach ($this->preguntasPaso4 as $section) {
+                foreach ($section['preguntas'] as $pregunta) {
+                    $resp = $this->respuestasPaso4[$pregunta] ?? null;
+                    if (empty($resp)) {
+                        $this->dispatch('showAlert', [
+                            'type' => 'warning',
+                            'title' => 'Campos Incompletos',
+                            'text' => "Debe responder: {$pregunta}"
+                        ]);
+                        return;
+                    }
+                }
+            }
+        }
+
+        if ($this->paso === 5) {
+            // Validar que todas las preguntas del paso 5 estén respondidas  
+            foreach ($this->preguntasPaso5 as $section) {
+                foreach ($section['preguntas'] as $pregunta) {
+                    $resp = $this->respuestasPaso5[$pregunta] ?? null;
+                    if (empty($resp)) {
+                        $this->dispatch('showAlert', [
+                            'type' => 'warning',
+                            'title' => 'Campos Incompletos',
+                            'text' => "Debe responder: {$pregunta}"
+                        ]);
+                        return;
+                    }
+                }
+            }
+        }
+
+        // Si pasa las validaciones, avanzar al siguiente paso
+        $this->paso++;
+        $this->calcularProgreso();
+    }
+
+    public function retroceder()
+    {
+        if ($this->paso > 0) {
+            $this->paso--;
+            $this->calcularProgreso();
+        }
+    }
+
+    private function calcularProgreso()
+    {
+        // TODO: Ajustar según total de pasos del formulario Hogar
+        $totalPasos = 10; // Placeholder
+        $this->progress = round(($this->paso / $totalPasos) * 100);
+    }
+
+    public function guardarDatos()
+    {
+        // TODO: Implementar guardado de datos
+        $this->dispatch('showAlert', [
+            'type' => 'info',
+            'title' => 'En desarrollo',
+            'text' => 'El guardado de datos se implementará próximamente'
+        ]);
+    }
+
+    private function convertirRespuesta($valor)
+    {
+        // Convertir respuestas de radio buttons a números
+        if ($valor === 'SI')
+            return '1';
+        if ($valor === 'NO')
+            return '2';
+        if ($valor === 'NO APLICA')
+            return '3';
+        // Devolver texto tal cual
+        return $valor;
+    }
+
+    public function resetear()
+    {
+        $this->paso = 0;
+        $this->guardado = false;
+        $this->reset();
+
+        $this->dispatch('showAlert', [
+            'type' => 'success',
+            'title' => 'Reseteado',
+            'text' => 'Volviendo a la selección de llamadas'
+        ]);
+    }
+
+    public function render()
+    {
+        return view('livewire.formulario-hogar')
+            ->layout('components.layouts.app');
+    }
+}
